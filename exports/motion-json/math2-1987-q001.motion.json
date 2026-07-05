@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "motion-explanation-v1",
+  "subject": "math2",
+  "year": 1987,
+  "questionNo": 1,
+  "source": {
+    "type": "markdown",
+    "path": "D:\\work\\Kaoyan-Math2-Papers\\papers\\MinerU_markdown_math2_1987-2019_2065686324641095680.md",
+    "status": "needs_human_review"
+  },
+  "title": "数学二 1987 第 1 题（自动提取，待核对）",
+  "questionText": "设 $y = \\ln ( 1 + a x )$ ，其中 a 为非零常数，则 y 0 = ， $y ^ { \\prime \\prime } { = }$",
+  "answer": "TODO: 答案未能自动提取，需要人工核对",
+  "reviewStatus": "needs_human_review",
+  "finalizationStatus": "blocked",
+  "estimatedDurationMs": 30000,
+  "steps": [
+    {
+      "id": "step-001",
+      "type": "intro",
+      "narration": "本题为 math2 1987 年第 1 题。以下内容从 Markdown 文件自动提取，尚未人工核对，需要审核。",
+      "formula": null,
+      "durationMs": 3000,
+      "reviewStatus": "needs_human_review"
+    },
+    {
+      "id": "step-002",
+      "type": "show_question",
+      "narration": "题干：设 $y = \\ln ( 1 + a x )$ ，其中 a 为非零常数，则 y 0 = ， $y ^ { \\prime \\prime } { = }$",
+      "formula": null,
+      "durationMs": 4000,
+      "reviewStatus": "needs_human_review"
+    },
+    {
+      "id": "step-003",
+      "type": "show_formula",
+      "narration": "从 Markdown 中识别到的公式，需人工核对是否为本题所需。",
+      "formula": "\\int_ {0} ^ {1} x \\arcsin x \\mathrm{d} x = \\frac {\\pi}{4} - \\frac {1}{2} \\int_ {0} ^ {1} \\frac {x ^ {2}}{\\sqrt {1 - x ^ {2}}} \\mathrm{d} x = \\frac {\\pi}{4} - \\frac {1}{2} \\int_ {0} ^ {\\frac {\\pi}{2}} \\sin^ {2} x \\mathrm{d} x = \\frac {\\pi}{8}.",
+      "durationMs": 4000,
+      "reviewStatus": "needs_human_review"
+    },
+    {
+      "id": "step-004",
+      "type": "transform_formula",
+      "narration": "后续公式或变形，需人工核对顺序与正确性。",
+      "formula": "g ^ {\\prime \\prime} (c) = \\lim _ {x \\rightarrow c} \\frac {g ^ {\\prime} (x) - g ^ {\\prime} (c)}{x - c} = \\lim _ {x \\rightarrow c} \\frac {g ^ {\\prime} (x)}{x - c} <   0.",
+      "durationMs": 4000,
+      "reviewStatus": "needs_human_review"
+    },
+    {
+      "id": "step-005",
+      "type": "transform_formula",
+      "narration": "后续公式或变形，需人工核对顺序与正确性。",
+      "formula": "S (a) = \\frac {1}{2} \\left(a ^ {2} + 1\\right) \\frac {a ^ {2} + 1}{2 a} - \\int_ {0} ^ {1} (- x ^ {2} + 1) d x = \\frac {a ^ {3}}{4} + \\frac {a}{2} + \\frac {1}{4 a} - \\frac {2}{3}.",
+      "durationMs": 4000,
+      "reviewStatus": "needs_human_review"
+    },
+    {
+      "id": "step-006",
+      "type": "transform_formula",
+      "narration": "后续公式或变形，需人工核对顺序与正确性。",
+      "formula": "\\begin{array}{l} \\text {原式} = \\lim _ {a \\rightarrow + 0} \\frac {1}{4 a ^ {2}} \\left[ \\int_ {0} ^ {2 a} f (u) \\mathrm{d} u - \\int_ {- 2 a} ^ {0} f (u) \\mathrm{d} u \\right] \\\\ = \\lim _ {a \\rightarrow + 0} \\frac {1}{8 a} [ 2 f (2 a) - 2 f (- 2 a) ] = \\lim _ {a \\rightarrow + 0} \\frac {1}{4 a} [ f (2 a) - f (- 2 a) ] \\\\ = \\lim _ {a \\to + 0} \\frac {1}{4} \\left[ 2 f ^ {\\prime} (2 a) + 2 f ^ {\\prime} (- 2 a) \\right] = f ^ {\\prime} (0). \\\\ \\end{array}",
+      "durationMs": 4000,
+      "reviewStatus": "needs_human_review"
+    },
+    {
+      "id": "step-007",
+      "type": "transform_formula",
+      "narration": "后续公式或变形，需人工核对顺序与正确性。",
+      "formula": "\\begin{array}{l} \\left| \\frac {1}{2 a} \\int_ {- a} ^ {a} f (t) \\mathrm{d} t - f (x) \\right| = \\left| \\frac {1}{2 a} \\int_ {- a} ^ {a} [ f (t) - f (x) ] \\mathrm{d} t \\right| \\\\ \\leqslant \\frac {1}{2 a} \\int_ {- a} ^ {a} | f (t) - f (x) | \\mathrm{d} t \\leqslant \\frac {1}{2 a} \\int_ {- a} ^ {a} (M - m) \\mathrm{d} t = M - m \\\\ \\end{array}",
+      "durationMs": 4000,
+      "reviewStatus": "needs_human_review"
+    },
+    {
+      "id": "step-008",
+      "type": "explanation_text",
+      "narration": "解析摘要：TODO: 解析未能自动提取，需要人工核对",
+      "formula": null,
+      "durationMs": 5000,
+      "reviewStatus": "needs_human_review"
+    },
+    {
+      "id": "step-009",
+      "type": "conclusion",
+      "narration": "结论：本题答案为 TODO: 答案未能自动提取，需要人工核对。真实答案必须经人工核对原题与解析后确认。",
+      "formula": null,
+      "durationMs": 3000,
+      "reviewStatus": "needs_human_review"
+    }
+  ]
+}
