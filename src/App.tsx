@@ -25,7 +25,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>考研真题 Motion 动态解析预览</h1>
+        <h1>考研真题 Motion 动态解析舞台</h1>
       </header>
       <main className="app-main">
         {error && (

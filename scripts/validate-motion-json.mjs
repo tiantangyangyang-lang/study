@@ -8,12 +8,35 @@ const root = join(__dirname, '..')
 const STEP_TYPES = new Set([
   'intro',
   'show_question',
-  'show_formula',
-  'transform_formula',
-  'highlight',
-  'explanation_text',
+  'condition_extract',
+  'formula_reveal',
+  'equation_transform',
+  'token_highlight',
+  'graph_explain',
+  'table_explain',
+  'matrix_explain',
   'choice_elimination',
-  'conclusion',
+  'common_mistake',
+  'explanation_text',
+  'conclusion_reveal',
+])
+
+const ACTION_KINDS = new Set([
+  'write_text',
+  'write_formula',
+  'transform_formula',
+  'highlight_tokens',
+  'fade_in',
+  'fade_out',
+  'move_to_board',
+  'box_region',
+  'underline',
+  'reveal_answer',
+  'eliminate_choice',
+  'draw_axis',
+  'plot_curve',
+  'show_table',
+  'show_matrix',
 ])
 
 const REVIEW_STATUS = new Set(['needs_human_review', 'verified', 'rejected'])
@@ -44,6 +67,79 @@ async function listMotionJson(dir) {
 
 function relativePath(file) {
   return file.startsWith(root) ? file.slice(root.length + 1) : file
+}
+
+function validateAction(action, stepIndex, actionIndex) {
+  const errors = []
+  const prefix = `steps[${stepIndex}].visual.actions[${actionIndex}]`
+
+  if (!action || typeof action !== 'object') {
+    return [`${prefix} 必须是对象`]
+  }
+
+  if (!ACTION_KINDS.has(action.kind)) {
+    errors.push(`${prefix}.kind 必须是允许的动作类型之一`)
+  }
+
+  if (action.kind === 'transform_formula') {
+    if (typeof action.fromFormula !== 'string' || action.fromFormula.length === 0) {
+      errors.push(`${prefix}.fromFormula 必须是非空字符串`)
+    }
+    if (typeof action.toFormula !== 'string' || action.toFormula.length === 0) {
+      errors.push(`${prefix}.toFormula 必须是非空字符串`)
+    }
+  }
+
+  if (action.kind === 'highlight_tokens') {
+    if (!Array.isArray(action.tokens) || action.tokens.length === 0) {
+      errors.push(`${prefix}.tokens 必须是非空数组`)
+    }
+  }
+
+  if (action.kind === 'eliminate_choice') {
+    if (!Array.isArray(action.choices) || action.choices.length === 0) {
+      errors.push(`${prefix}.choices 必须是非空数组`)
+    }
+    if (action.targetChoice !== undefined && typeof action.targetChoice !== 'string') {
+      errors.push(`${prefix}.targetChoice 必须是字符串`)
+    }
+  }
+
+  if (action.region && typeof action.region === 'object') {
+    const { x, y, width, height } = action.region
+    if (typeof x !== 'number' || typeof y !== 'number' ||
+        typeof width !== 'number' || typeof height !== 'number') {
+      errors.push(`${prefix}.region 必须包含 number 类型的 x, y, width, height`)
+    }
+  }
+
+  return errors
+}
+
+function validateVisual(visual, stepIndex) {
+  const errors = []
+  const prefix = `steps[${stepIndex}].visual`
+
+  if (visual === undefined) return errors
+  if (typeof visual !== 'object') {
+    return [`${prefix} 必须是对象`]
+  }
+
+  const validLayouts = new Set(['blackboard', 'split', 'question', 'graph', 'table', 'matrix'])
+  if (!validLayouts.has(visual.layout)) {
+    errors.push(`${prefix}.layout 必须是允许的布局之一`)
+  }
+
+  if (!Array.isArray(visual.actions)) {
+    errors.push(`${prefix}.actions 必须是数组`)
+    return errors
+  }
+
+  for (let i = 0; i < visual.actions.length; i++) {
+    errors.push(...validateAction(visual.actions[i], stepIndex, i))
+  }
+
+  return errors
 }
 
 function validateStep(step, index) {
@@ -77,6 +173,8 @@ function validateStep(step, index) {
   if (!REVIEW_STATUS.has(step.reviewStatus)) {
     errors.push(`${prefix}.reviewStatus 必须是合法 review status`)
   }
+
+  errors.push(...validateVisual(step.visual, index))
 
   return errors
 }
@@ -221,6 +319,7 @@ async function main() {
       year: parsed.year,
       questionNo: parsed.questionNo,
       steps: Array.isArray(parsed.steps) ? parsed.steps.length : 0,
+      hasVisual: parsed.steps?.some((s) => s.visual?.actions?.length > 0),
       reviewStatus: parsed.reviewStatus,
       finalizationStatus: parsed.finalizationStatus,
       sourcePath: parsed.source?.path,
@@ -232,7 +331,7 @@ async function main() {
   console.log(`错误数: ${totalErrors}`)
   for (const item of summary) {
     console.log(
-      `- ${item.file} | ${item.subject} ${item.year} Q${item.questionNo} | ${item.steps} 步 | ${item.reviewStatus} / ${item.finalizationStatus}`,
+      `- ${item.file} | ${item.subject} ${item.year} Q${item.questionNo} | ${item.steps} 步 | visual=${item.hasVisual ? '是' : '否'} | ${item.reviewStatus} / ${item.finalizationStatus}`,
     )
   }
 

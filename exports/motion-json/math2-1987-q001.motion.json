@@ -11,65 +11,169 @@
   "title": "数学二 1987 第 1 题（自动提取，待核对）",
   "questionText": "设 $y = \\ln ( 1 + a x )$ ，其中 a 为非零常数，则 y 0 = ， $y ^ { \\prime \\prime } { = }$",
   "answer": "TODO: 答案未能自动提取，需要人工核对",
+  "choices": [
+    "C ; \\frac { 1 } { 2 } f ( 2 b ) - \\frac { 1 } { 2 } f ( 2 a ) ,$",
+    "D 是曲线 $y = \\sin x + 1$ 与三条直线 $x = 0 , x = \\pi , y = 0$ 围成的曲边梯形．求D 绕 x 轴旋转一周所生成的旋转体的体积V",
+    "C \\right)$ ，满足初始条件的特解为 $y = { \\frac { x } { 2 } } - { \\frac { 1 } { x } }$",
+    "C _ { 1 } + C _ { 2 } x ) \\mathrm { e } ^ { - 2 x } + { \\frac { 1 } { 4 } } ( x - 1 ) \\mathrm { e } ^ { x }$"
+  ],
   "reviewStatus": "needs_human_review",
   "finalizationStatus": "blocked",
-  "estimatedDurationMs": 30000,
+  "estimatedDurationMs": 37500,
   "steps": [
     {
       "id": "step-001",
       "type": "intro",
-      "narration": "本题为 math2 1987 年第 1 题。以下内容从 Markdown 文件自动提取，尚未人工核对，需要审核。",
+      "narration": "本题为 数学二 1987 年第 1 题。以下内容从 Markdown 文件自动提取，尚未人工核对，需要审核。",
       "formula": null,
       "durationMs": 3000,
-      "reviewStatus": "needs_human_review"
+      "reviewStatus": "needs_human_review",
+      "visual": {
+        "layout": "blackboard",
+        "actions": [
+          {
+            "kind": "write_text",
+            "text": "数学二 1987 年第 1 题"
+          }
+        ]
+      }
     },
     {
       "id": "step-002",
       "type": "show_question",
-      "narration": "题干：设 $y = \\ln ( 1 + a x )$ ，其中 a 为非零常数，则 y 0 = ， $y ^ { \\prime \\prime } { = }$",
+      "narration": "请先读题：设 $y = \\ln ( 1 + a x )$ ，其中 a 为非零常数，则 y 0 = ， $y ^ { \\prime \\prime } { = }$",
       "formula": null,
       "durationMs": 4000,
-      "reviewStatus": "needs_human_review"
+      "reviewStatus": "needs_human_review",
+      "visual": {
+        "layout": "question",
+        "actions": [
+          {
+            "kind": "write_text",
+            "text": "设 $y = \\ln ( 1 + a x )$ ，其中 a 为非零常数，则 y 0 = ， $y ^ { \\prime \\prime } { = }$"
+          }
+        ]
+      }
     },
     {
       "id": "step-003",
-      "type": "show_formula",
-      "narration": "从 Markdown 中识别到的公式，需人工核对是否为本题所需。",
+      "type": "condition_extract",
+      "narration": "提取题目中的关键条件或已知公式。",
       "formula": "\\int_ {0} ^ {1} x \\arcsin x \\mathrm{d} x = \\frac {\\pi}{4} - \\frac {1}{2} \\int_ {0} ^ {1} \\frac {x ^ {2}}{\\sqrt {1 - x ^ {2}}} \\mathrm{d} x = \\frac {\\pi}{4} - \\frac {1}{2} \\int_ {0} ^ {\\frac {\\pi}{2}} \\sin^ {2} x \\mathrm{d} x = \\frac {\\pi}{8}.",
       "durationMs": 4000,
-      "reviewStatus": "needs_human_review"
+      "reviewStatus": "needs_human_review",
+      "visual": {
+        "layout": "blackboard",
+        "actions": [
+          {
+            "kind": "write_text",
+            "text": "关键条件"
+          },
+          {
+            "kind": "box_region",
+            "region": {
+              "x": 10,
+              "y": 10,
+              "width": 200,
+              "height": 60
+            },
+            "color": "#f59e0b"
+          },
+          {
+            "kind": "write_formula",
+            "formula": "\\int_ {0} ^ {1} x \\arcsin x \\mathrm{d} x = \\frac {\\pi}{4} - \\frac {1}{2} \\int_ {0} ^ {1} \\frac {x ^ {2}}{\\sqrt {1 - x ^ {2}}} \\mathrm{d} x = \\frac {\\pi}{4} - \\frac {1}{2} \\int_ {0} ^ {\\frac {\\pi}{2}} \\sin^ {2} x \\mathrm{d} x = \\frac {\\pi}{8}."
+          }
+        ]
+      }
     },
     {
       "id": "step-004",
-      "type": "transform_formula",
-      "narration": "后续公式或变形，需人工核对顺序与正确性。",
+      "type": "formula_reveal",
+      "narration": "揭示解题需要的核心公式。",
       "formula": "g ^ {\\prime \\prime} (c) = \\lim _ {x \\rightarrow c} \\frac {g ^ {\\prime} (x) - g ^ {\\prime} (c)}{x - c} = \\lim _ {x \\rightarrow c} \\frac {g ^ {\\prime} (x)}{x - c} <   0.",
       "durationMs": 4000,
-      "reviewStatus": "needs_human_review"
+      "reviewStatus": "needs_human_review",
+      "visual": {
+        "layout": "blackboard",
+        "actions": [
+          {
+            "kind": "write_text",
+            "text": "核心公式"
+          },
+          {
+            "kind": "write_formula",
+            "formula": "g ^ {\\prime \\prime} (c) = \\lim _ {x \\rightarrow c} \\frac {g ^ {\\prime} (x) - g ^ {\\prime} (c)}{x - c} = \\lim _ {x \\rightarrow c} \\frac {g ^ {\\prime} (x)}{x - c} <   0."
+          }
+        ]
+      }
     },
     {
       "id": "step-005",
-      "type": "transform_formula",
-      "narration": "后续公式或变形，需人工核对顺序与正确性。",
+      "type": "equation_transform",
+      "narration": "对关键式子进行变形，注意变化的部分。",
       "formula": "S (a) = \\frac {1}{2} \\left(a ^ {2} + 1\\right) \\frac {a ^ {2} + 1}{2 a} - \\int_ {0} ^ {1} (- x ^ {2} + 1) d x = \\frac {a ^ {3}}{4} + \\frac {a}{2} + \\frac {1}{4 a} - \\frac {2}{3}.",
-      "durationMs": 4000,
-      "reviewStatus": "needs_human_review"
+      "durationMs": 5000,
+      "reviewStatus": "needs_human_review",
+      "visual": {
+        "layout": "blackboard",
+        "actions": [
+          {
+            "kind": "transform_formula",
+            "fromFormula": "g ^ {\\prime \\prime} (c) = \\lim _ {x \\rightarrow c} \\frac {g ^ {\\prime} (x) - g ^ {\\prime} (c)}{x - c} = \\lim _ {x \\rightarrow c} \\frac {g ^ {\\prime} (x)}{x - c} <   0.",
+            "toFormula": "S (a) = \\frac {1}{2} \\left(a ^ {2} + 1\\right) \\frac {a ^ {2} + 1}{2 a} - \\int_ {0} ^ {1} (- x ^ {2} + 1) d x = \\frac {a ^ {3}}{4} + \\frac {a}{2} + \\frac {1}{4 a} - \\frac {2}{3}.",
+            "changedTokens": [
+              "TODO: 人工标注变化项"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "step-006",
-      "type": "transform_formula",
-      "narration": "后续公式或变形，需人工核对顺序与正确性。",
-      "formula": "\\begin{array}{l} \\text {原式} = \\lim _ {a \\rightarrow + 0} \\frac {1}{4 a ^ {2}} \\left[ \\int_ {0} ^ {2 a} f (u) \\mathrm{d} u - \\int_ {- 2 a} ^ {0} f (u) \\mathrm{d} u \\right] \\\\ = \\lim _ {a \\rightarrow + 0} \\frac {1}{8 a} [ 2 f (2 a) - 2 f (- 2 a) ] = \\lim _ {a \\rightarrow + 0} \\frac {1}{4 a} [ f (2 a) - f (- 2 a) ] \\\\ = \\lim _ {a \\to + 0} \\frac {1}{4} \\left[ 2 f ^ {\\prime} (2 a) + 2 f ^ {\\prime} (- 2 a) \\right] = f ^ {\\prime} (0). \\\\ \\end{array}",
+      "type": "token_highlight",
+      "narration": "高亮当前步骤中需要重点关注的符号或项。",
+      "formula": "\\int_ {0} ^ {1} x \\arcsin x \\mathrm{d} x = \\frac {\\pi}{4} - \\frac {1}{2} \\int_ {0} ^ {1} \\frac {x ^ {2}}{\\sqrt {1 - x ^ {2}}} \\mathrm{d} x = \\frac {\\pi}{4} - \\frac {1}{2} \\int_ {0} ^ {\\frac {\\pi}{2}} \\sin^ {2} x \\mathrm{d} x = \\frac {\\pi}{8}.",
       "durationMs": 4000,
-      "reviewStatus": "needs_human_review"
+      "reviewStatus": "needs_human_review",
+      "visual": {
+        "layout": "blackboard",
+        "actions": [
+          {
+            "kind": "highlight_tokens",
+            "formula": "\\int_ {0} ^ {1} x \\arcsin x \\mathrm{d} x = \\frac {\\pi}{4} - \\frac {1}{2} \\int_ {0} ^ {1} \\frac {x ^ {2}}{\\sqrt {1 - x ^ {2}}} \\mathrm{d} x = \\frac {\\pi}{4} - \\frac {1}{2} \\int_ {0} ^ {\\frac {\\pi}{2}} \\sin^ {2} x \\mathrm{d} x = \\frac {\\pi}{8}.",
+            "tokens": [
+              "x",
+              "a",
+              "极限",
+              "TODO"
+            ],
+            "style": "box"
+          }
+        ]
+      }
     },
     {
       "id": "step-007",
-      "type": "transform_formula",
-      "narration": "后续公式或变形，需人工核对顺序与正确性。",
-      "formula": "\\begin{array}{l} \\left| \\frac {1}{2 a} \\int_ {- a} ^ {a} f (t) \\mathrm{d} t - f (x) \\right| = \\left| \\frac {1}{2 a} \\int_ {- a} ^ {a} [ f (t) - f (x) ] \\mathrm{d} t \\right| \\\\ \\leqslant \\frac {1}{2 a} \\int_ {- a} ^ {a} | f (t) - f (x) | \\mathrm{d} t \\leqslant \\frac {1}{2 a} \\int_ {- a} ^ {a} (M - m) \\mathrm{d} t = M - m \\\\ \\end{array}",
-      "durationMs": 4000,
-      "reviewStatus": "needs_human_review"
+      "type": "choice_elimination",
+      "narration": "逐项分析选项。不确定的项保持待审核状态。",
+      "formula": null,
+      "durationMs": 5000,
+      "reviewStatus": "needs_human_review",
+      "visual": {
+        "layout": "split",
+        "actions": [
+          {
+            "kind": "eliminate_choice",
+            "choices": [
+              "C ; \\frac { 1 } { 2 } f ( 2 b ) - \\frac { 1 } { 2 } f ( 2 a ) ,$",
+              "D 是曲线 $y = \\sin x + 1$ 与三条直线 $x = 0 , x = \\pi , y = 0$ 围成的曲边梯形．求D 绕 x 轴旋转一周所生成的旋转体的体积V",
+              "C \\right)$ ，满足初始条件的特解为 $y = { \\frac { x } { 2 } } - { \\frac { 1 } { x } }$",
+              "C _ { 1 } + C _ { 2 } x ) \\mathrm { e } ^ { - 2 x } + { \\frac { 1 } { 4 } } ( x - 1 ) \\mathrm { e } ^ { x }$"
+            ],
+            "targetChoice": "TODO"
+          }
+        ]
+      }
     },
     {
       "id": "step-008",
@@ -77,15 +181,33 @@
       "narration": "解析摘要：TODO: 解析未能自动提取，需要人工核对",
       "formula": null,
       "durationMs": 5000,
-      "reviewStatus": "needs_human_review"
+      "reviewStatus": "needs_human_review",
+      "visual": {
+        "layout": "blackboard",
+        "actions": [
+          {
+            "kind": "write_text",
+            "text": "TODO: 解析未能自动提取，需要人工核对"
+          }
+        ]
+      }
     },
     {
       "id": "step-009",
-      "type": "conclusion",
-      "narration": "结论：本题答案为 TODO: 答案未能自动提取，需要人工核对。真实答案必须经人工核对原题与解析后确认。",
+      "type": "conclusion_reveal",
+      "narration": "最终答案：TODO: 答案未能自动提取，需要人工核对。真实答案必须经人工核对原题与解析后确认。",
       "formula": null,
-      "durationMs": 3000,
-      "reviewStatus": "needs_human_review"
+      "durationMs": 3500,
+      "reviewStatus": "needs_human_review",
+      "visual": {
+        "layout": "blackboard",
+        "actions": [
+          {
+            "kind": "reveal_answer",
+            "text": "TODO: 答案未能自动提取，需要人工核对"
+          }
+        ]
+      }
     }
   ]
 }

@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { AnimatePresence, motion } from 'motion/react'
-import MotionStepCard from './MotionStepCard'
+import { motion } from 'motion/react'
+import AnimatedQuestionPanel from './AnimatedQuestionPanel'
+import MotionStage from './MotionStage'
 import MotionTimeline from './MotionTimeline'
+import StepNarration from './StepNarration'
 import type { MotionExplanationJSON } from './types'
 
 interface MotionExplainPlayerProps {
@@ -15,6 +17,7 @@ export default function MotionExplainPlayer({
   const [isPlaying, setIsPlaying] = useState(false)
   const [isAutoPlaying, setIsAutoPlaying] = useState(false)
   const [reducedMotion, setReducedMotion] = useState(false)
+  const [speed, setSpeed] = useState<0.75 | 1 | 1.5>(1)
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -88,7 +91,7 @@ export default function MotionExplainPlayer({
       return
     }
 
-    const duration = reducedMotion ? 0 : currentStep.durationMs
+    const duration = reducedMotion ? 0 : currentStep.durationMs / speed
     const effectiveDuration = Math.max(duration, 500)
 
     timerRef.current = setTimeout(() => {
@@ -107,6 +110,7 @@ export default function MotionExplainPlayer({
     currentIndex,
     totalSteps,
     reducedMotion,
+    speed,
     clearTimer,
   ])
 
@@ -123,63 +127,55 @@ export default function MotionExplainPlayer({
   }
 
   return (
-    <div className="player">
-      <aside className="panel">
-        <h2>题目信息</h2>
-        <ul className="info-list">
-          <li>
-            <span className="label">标题：</span>
-            {explanation.title}
-          </li>
-          <li>
-            <span className="label">科目：</span>
-            {explanation.subject} / {explanation.year} / 第 {explanation.questionNo} 题
-          </li>
-          <li>
-            <span className="label">题干：</span>
-            {explanation.questionText}
-          </li>
-          <li>
-            <span className="label">答案：</span>
-            {explanation.answer}
-          </li>
-          <li>
-            <span className="label">预计时长：</span>
-            {explanation.estimatedDurationMs / 1000}s
-          </li>
-          <li>
-            <span className="label">审核状态：</span>
-            <span className="badge badge-review">{explanation.reviewStatus}</span>
-          </li>
-          <li>
-            <span className="label">最终状态：</span>
-            <span className="badge badge-blocked">{explanation.finalizationStatus}</span>
-          </li>
-          <li>
-            <span className="label">来源：</span>
-            {explanation.source.type} / {explanation.source.path}
-          </li>
-        </ul>
+    <div className="player-theater">
+      <section className="panel paper-panel">
+        <AnimatedQuestionPanel
+          explanation={explanation}
+          currentStepIndex={currentIndex}
+          steps={explanation.steps}
+          reducedMotion={reducedMotion}
+        />
+      </section>
 
-        <h2 style={{ marginTop: '1.5rem' }}>步骤时间轴</h2>
+      <section className="panel stage-panel">
+        <MotionStage step={currentStep} reducedMotion={reducedMotion} />
+      </section>
+
+      <aside className="panel info-panel">
+        <h2>当前讲解</h2>
+        <StepNarration
+          narration={currentStep.narration}
+          reducedMotion={reducedMotion}
+        />
+
+        <div className="meta-block">
+          <div className="meta-row">
+            <span className="meta-label">科目：</span>
+            {explanation.subject} / {explanation.year} / Q{explanation.questionNo}
+          </div>
+          <div className="meta-row">
+            <span className="meta-label">答案：</span>
+            {explanation.answer}
+          </div>
+          <div className="meta-row">
+            <span className="meta-label">状态：</span>
+            <span className="badge badge-review">{explanation.reviewStatus}</span>
+            {' / '}
+            <span className="badge badge-blocked">{explanation.finalizationStatus}</span>
+          </div>
+          <div className="meta-row">
+            <span className="meta-label">来源：</span>
+            <span className="source-path">{explanation.source.path}</span>
+          </div>
+        </div>
+
+        <h2 style={{ marginTop: '1rem' }}>步骤时间轴</h2>
         <MotionTimeline
           steps={explanation.steps}
           currentIndex={currentIndex}
           onSelect={goToStep}
         />
       </aside>
-
-      <section className="panel stage">
-        <AnimatePresence mode="wait" initial={false}>
-          <MotionStepCard
-            key={currentStep.id}
-            step={currentStep}
-            stepIndex={currentIndex}
-            totalSteps={totalSteps}
-            reducedMotion={reducedMotion}
-          />
-        </AnimatePresence>
-      </section>
 
       <div className="controls">
         <button
@@ -219,6 +215,20 @@ export default function MotionExplainPlayer({
         >
           重播
         </button>
+
+        <div className="speed-controls">
+          <span className="speed-label">速度：</span>
+          {[0.75, 1, 1.5].map((value) => (
+            <button
+              key={value}
+              className={`control-btn speed-btn ${speed === value ? 'primary' : ''}`}
+              onClick={() => setSpeed(value as 0.75 | 1 | 1.5)}
+            >
+              {value}x
+            </button>
+          ))}
+        </div>
+
         <div className="progress" aria-hidden="true">
           <motion.div
             className="progress-bar"

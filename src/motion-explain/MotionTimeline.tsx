@@ -9,12 +9,17 @@ interface MotionTimelineProps {
 const typeLabels: Record<MotionStep['type'], string> = {
   intro: '引入',
   show_question: '题干',
-  show_formula: '公式',
-  transform_formula: '变形',
-  highlight: '高亮',
-  explanation_text: '说明',
+  condition_extract: '条件',
+  formula_reveal: '公式',
+  equation_transform: '变形',
+  token_highlight: '高亮',
+  graph_explain: '图像',
+  table_explain: '表格',
+  matrix_explain: '矩阵',
   choice_elimination: '排除',
-  conclusion: '结论',
+  common_mistake: '易错',
+  explanation_text: '说明',
+  conclusion_reveal: '结论',
 }
 
 export default function MotionTimeline({
