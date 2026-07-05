@@ -1,16 +1,15 @@
 import { motion } from 'motion/react'
-import MotionFormulaBlock from './MotionFormulaBlock'
+import MathMarkdown from './MathMarkdown'
+import FormulaGallery from './FormulaGallery'
 import type { MotionExplanationJSON } from './types'
 
 interface AnimatedQuestionPanelProps {
   explanation: MotionExplanationJSON
   currentStepIndex: number
-  steps: { id: string; type: string; narration: string }[]
   reducedMotion: boolean
 }
 
-const typeOrder = [
-  'intro',
+const visibleTypes = new Set([
   'show_question',
   'condition_extract',
   'formula_reveal',
@@ -23,19 +22,23 @@ const typeOrder = [
   'common_mistake',
   'explanation_text',
   'conclusion_reveal',
-]
+])
 
 export default function AnimatedQuestionPanel({
   explanation,
   currentStepIndex,
   reducedMotion,
 }: AnimatedQuestionPanelProps) {
-  const stepsBeforeOrAtCurrent = typeOrder.slice(0, typeOrder.indexOf(explanation.steps[currentStepIndex]?.type) + 1)
+  const steps = explanation.explanation.steps
+  const currentStep = steps[currentStepIndex]
 
-  const questionRevealed = stepsBeforeOrAtCurrent.includes('show_question')
-  const conditionsRevealed = stepsBeforeOrAtCurrent.includes('condition_extract')
-  const choicesRevealed = stepsBeforeOrAtCurrent.includes('choice_elimination')
-  const conclusionRevealed = stepsBeforeOrAtCurrent.includes('conclusion_reveal')
+  const questionVisible = visibleTypes.has(currentStep.type)
+  const conclusionRevealed = currentStep.type === 'conclusion_reveal'
+
+  const stepFormulaIds = currentStep.formulas ?? []
+  const stepFormulas = explanation.question.formulas.filter((f) =>
+    stepFormulaIds.includes(f.id),
+  )
 
   return (
     <div className="question-paper">
@@ -46,43 +49,43 @@ export default function AnimatedQuestionPanel({
       <motion.div
         className="paper-question"
         initial={{ opacity: 0 }}
-        animate={{ opacity: questionRevealed ? 1 : 0.2 }}
+        animate={{ opacity: questionVisible ? 1 : 0.25 }}
         transition={{ duration: reducedMotion ? 0 : 0.5 }}
       >
         <span className="q-number">{explanation.questionNo}.</span>
-        {explanation.questionText}
+        <MathMarkdown>{explanation.question.stemMarkdown}</MathMarkdown>
       </motion.div>
 
-      {conditionsRevealed && explanation.steps[currentStepIndex]?.formula && (
+      {stepFormulas.length > 0 && (
         <motion.div
           className="paper-conditions"
           initial={{ opacity: 0, x: reducedMotion ? 0 : -8 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: reducedMotion ? 0 : 0.4 }}
         >
-          <div className="condition-label">本题条件 / 关键式</div>
-          <MotionFormulaBlock formula={explanation.steps[currentStepIndex].formula ?? ''} />
+          <div className="condition-label">本题涉及公式</div>
+          <FormulaGallery formulas={stepFormulas} />
         </motion.div>
       )}
 
-      {explanation.choices && choicesRevealed && (
+      {explanation.question.options && questionVisible && (
         <motion.div
           className="paper-choices"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: reducedMotion ? 0 : 0.5 }}
         >
-          {explanation.choices.map((choice, index) => {
+          {explanation.question.options.map((choice, index) => {
             const letter = choice.charAt(0)
+            const isCorrect =
+              conclusionRevealed && explanation.answer.value.startsWith(letter)
             return (
               <div
                 key={index}
-                className={`paper-choice ${
-                  conclusionRevealed && explanation.answer.startsWith(letter) ? 'correct' : ''
-                }`}
+                className={`paper-choice ${isCorrect ? 'correct' : ''}`}
               >
                 <span className="paper-choice-letter">{letter}.</span>
-                {choice.slice(2)}
+                <MathMarkdown>{choice.slice(2)}</MathMarkdown>
               </div>
             )
           })}
@@ -96,7 +99,7 @@ export default function AnimatedQuestionPanel({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: reducedMotion ? 0 : 0.5 }}
         >
-          答案：{explanation.answer}
+          <MathMarkdown>{`答案：${explanation.answer.markdown}`}</MathMarkdown>
         </motion.div>
       )}
     </div>

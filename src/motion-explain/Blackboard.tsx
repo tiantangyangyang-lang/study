@@ -1,12 +1,13 @@
 import { motion } from 'motion/react'
-import MotionFormulaBlock from './MotionFormulaBlock'
+import RenderedFormula from './RenderedFormula'
+import type { FormulaObject } from './types'
 
 interface BlackboardProps {
   text?: string
-  formula?: string
+  formula?: FormulaObject
   transform?: {
-    fromFormula: string
-    toFormula: string
+    fromFormula: FormulaObject
+    toFormula: FormulaObject
     changedTokens?: string[]
   }
   reducedMotion: boolean
@@ -24,10 +25,10 @@ export default function Blackboard({
         <motion.div
           className="board-line"
           initial={{ opacity: 1, y: 0 }}
-          animate={{ opacity: 0, y: reducedMotion ? 0 : -24 }}
+          animate={{ opacity: 0.35, y: reducedMotion ? 0 : -24 }}
           transition={{ duration: reducedMotion ? 0 : 0.6, ease: 'easeIn' }}
         >
-          <MotionFormulaBlock formula={transform.fromFormula} />
+          <RenderedFormula formula={transform.fromFormula} showReadable={false} />
         </motion.div>
         <motion.div
           className="board-line"
@@ -39,7 +40,7 @@ export default function Blackboard({
             ease: 'easeOut',
           }}
         >
-          <MotionFormulaBlock formula={transform.toFormula} />
+          <RenderedFormula formula={transform.toFormula} showReadable={false} />
         </motion.div>
         {transform.changedTokens && transform.changedTokens.length > 0 && (
           <motion.div
@@ -58,7 +59,7 @@ export default function Blackboard({
   return (
     <div className="blackboard">
       {text && <p className="board-text">{text}</p>}
-      {formula && <MotionFormulaBlock formula={formula} />}
+      {formula && <RenderedFormula formula={formula} />}
     </div>
   )
 }

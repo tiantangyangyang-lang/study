@@ -1,23 +1,24 @@
 import { motion } from 'motion/react'
+import MathMarkdown from './MathMarkdown'
 
 interface StepNarrationProps {
-  narration: string
+  markdown: string
   reducedMotion: boolean
 }
 
 export default function StepNarration({
-  narration,
+  markdown,
   reducedMotion,
 }: StepNarrationProps) {
   return (
     <motion.div
       className="step-narration"
-      key={narration}
+      key={markdown}
       initial={{ opacity: 0, y: reducedMotion ? 0 : 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reducedMotion ? 0 : 0.4, ease: 'easeOut' }}
     >
-      {narration}
+      <MathMarkdown>{markdown}</MathMarkdown>
     </motion.div>
   )
 }

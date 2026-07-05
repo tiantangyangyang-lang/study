@@ -30,10 +30,10 @@ export default function MotionExplainPlayer({
     return () => mediaQuery.removeEventListener('change', listener)
   }, [])
 
-  const currentStep = explanation.steps[currentIndex]
-  const totalSteps = explanation.steps.length
-  const progress =
-    totalSteps > 0 ? ((currentIndex + 1) / totalSteps) * 100 : 0
+  const steps = explanation.explanation.steps
+  const currentStep = steps[currentIndex]
+  const totalSteps = steps.length
+  const progress = totalSteps > 0 ? ((currentIndex + 1) / totalSteps) * 100 : 0
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) {
@@ -132,19 +132,22 @@ export default function MotionExplainPlayer({
         <AnimatedQuestionPanel
           explanation={explanation}
           currentStepIndex={currentIndex}
-          steps={explanation.steps}
           reducedMotion={reducedMotion}
         />
       </section>
 
       <section className="panel stage-panel">
-        <MotionStage step={currentStep} reducedMotion={reducedMotion} />
+        <MotionStage
+          explanation={explanation}
+          step={currentStep}
+          reducedMotion={reducedMotion}
+        />
       </section>
 
       <aside className="panel info-panel">
         <h2>当前讲解</h2>
         <StepNarration
-          narration={currentStep.narration}
+          markdown={currentStep.narrationMarkdown}
           reducedMotion={reducedMotion}
         />
 
@@ -155,7 +158,7 @@ export default function MotionExplainPlayer({
           </div>
           <div className="meta-row">
             <span className="meta-label">答案：</span>
-            {explanation.answer}
+            {explanation.answer.value}
           </div>
           <div className="meta-row">
             <span className="meta-label">状态：</span>
@@ -167,11 +170,17 @@ export default function MotionExplainPlayer({
             <span className="meta-label">来源：</span>
             <span className="source-path">{explanation.source.path}</span>
           </div>
+          <div className="meta-row">
+            <span className="meta-label">渲染器：</span>
+            {explanation.rendering.mathRenderer} (markdownMath={
+              explanation.rendering.markdownMath ? 'true' : 'false'
+            })
+          </div>
         </div>
 
         <h2 style={{ marginTop: '1rem' }}>步骤时间轴</h2>
         <MotionTimeline
-          steps={explanation.steps}
+          steps={steps}
           currentIndex={currentIndex}
           onSelect={goToStep}
         />

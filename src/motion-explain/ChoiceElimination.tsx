@@ -1,4 +1,5 @@
 import { motion } from 'motion/react'
+import MathMarkdown from './MathMarkdown'
 
 interface ChoiceEliminationProps {
   choices: string[]
@@ -32,7 +33,9 @@ export default function ChoiceElimination({
             }}
           >
             <span className="choice-letter">{letter}</span>
-            <span className="choice-text">{choice.slice(2)}</span>
+            <div className="choice-text">
+              <MathMarkdown>{choice.slice(2)}</MathMarkdown>
+            </div>
             {isEliminated && (
               <motion.div
                 className="strike-line"

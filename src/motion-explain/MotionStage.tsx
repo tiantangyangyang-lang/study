@@ -1,16 +1,36 @@
-import { motion, AnimatePresence } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import Blackboard from './Blackboard'
 import FormulaTransform from './FormulaTransform'
 import TokenHighlighter from './TokenHighlighter'
 import ChoiceElimination from './ChoiceElimination'
-import type { MotionStep, VisualAction } from './types'
+import MathMarkdown from './MathMarkdown'
+import type { MotionExplanationJSON, ExplanationStep, VisualAction, FormulaObject } from './types'
 
 interface MotionStageProps {
-  step: MotionStep
+  explanation: MotionExplanationJSON
+  step: ExplanationStep
   reducedMotion: boolean
 }
 
-function renderAction(action: VisualAction, reducedMotion: boolean, index: number) {
+function getFormulaById(explanation: MotionExplanationJSON, id: string): FormulaObject | null {
+  const all = [
+    ...explanation.question.formulas,
+    ...explanation.answer.formulas,
+    ...explanation.explanation.steps.flatMap((s) => s.formulas.map((fid) => {
+      const qf = explanation.question.formulas.find((f) => f.id === fid)
+      if (qf) return qf
+      return null
+    }).filter(Boolean) as FormulaObject[]),
+  ]
+  return all.find((f) => f.id === id) ?? null
+}
+
+function renderAction(
+  action: VisualAction,
+  explanation: MotionExplanationJSON,
+  reducedMotion: boolean,
+  index: number,
+) {
   const baseTransition = {
     initial: { opacity: 0, y: reducedMotion ? 0 : 12 },
     animate: { opacity: 1, y: 0 },
@@ -21,47 +41,79 @@ function renderAction(action: VisualAction, reducedMotion: boolean, index: numbe
   }
 
   switch (action.kind) {
+    case 'fade_in_question':
+      return (
+        <motion.div
+          key={index}
+          className="stage-line"
+          {...baseTransition}
+        >
+          <MathMarkdown>{explanation.question.stemMarkdown}</MathMarkdown>
+        </motion.div>
+      )
     case 'write_text':
       return (
-        <motion.div key={index} {...baseTransition} className="stage-line">
+        <motion.div key={index} className="stage-line" {...baseTransition}>
           {action.text}
         </motion.div>
       )
-    case 'write_formula':
+    case 'show_readable_explanation':
       return (
-        <motion.div key={index} {...baseTransition} className="stage-formula">
-          <Blackboard formula={action.formula} reducedMotion={reducedMotion} />
+        <motion.div key={index} className="stage-readable" {...baseTransition}>
+          {action.text}
         </motion.div>
       )
-    case 'transform_formula':
+    case 'write_formula': {
+      const wf = action.formulaId ? getFormulaById(explanation, action.formulaId) : null
+      return wf ? (
+        <motion.div key={index} className="stage-formula" {...baseTransition}>
+          <Blackboard formula={wf} reducedMotion={reducedMotion} />
+        </motion.div>
+      ) : null
+    }
+    case 'transform_formula': {
+      const fromF = action.fromFormulaId ? getFormulaById(explanation, action.fromFormulaId) : null
+      const toF = action.toFormulaId ? getFormulaById(explanation, action.toFormulaId) : null
+      if (!fromF || !toF) return null
       return (
         <FormulaTransform
           key={index}
-          fromFormula={action.fromFormula ?? ''}
-          toFormula={action.toFormula ?? ''}
+          fromFormula={fromF}
+          toFormula={toF}
           changedTokens={action.changedTokens}
           reducedMotion={reducedMotion}
         />
       )
-    case 'highlight_tokens':
+    }
+    case 'highlight_formula_tokens': {
+      const hf = action.formulaId ? getFormulaById(explanation, action.formulaId) : null
       return (
         <TokenHighlighter
           key={index}
-          formula={action.formula}
+          formula={hf ?? undefined}
           tokens={action.tokens ?? []}
-          style={action.style ?? 'box'}
+          style={(action.style as 'box' | 'underline' | 'highlight' | 'pulse') ?? 'box'}
           reducedMotion={reducedMotion}
         />
       )
-    case 'eliminate_choice': {
-      const choices = action.choices ?? []
+    }
+    case 'highlight_question_keywords':
+      return (
+        <motion.div key={index} className="stage-keywords" {...baseTransition}>
+          关键词：
+          {action.keywords?.map((kw, i) => (
+            <span key={i} className="keyword-tag">{kw}</span>
+          ))}
+        </motion.div>
+      )
+    case 'eliminate_choice':
       return (
         <ChoiceElimination
           key={index}
-          choices={choices}
+          choices={action.choices ?? explanation.question.options ?? []}
           eliminated={
             action.targetChoice && action.targetChoice !== 'TODO'
-              ? choices
+              ? (action.choices ?? explanation.question.options ?? [])
                   .map((c) => c.charAt(0))
                   .filter((letter) => letter !== action.targetChoice)
               : []
@@ -70,8 +122,7 @@ function renderAction(action: VisualAction, reducedMotion: boolean, index: numbe
           reducedMotion={reducedMotion}
         />
       )
-    }
-    case 'reveal_answer':
+    case 'reveal_conclusion':
       return (
         <motion.div
           key={index}
@@ -86,7 +137,9 @@ function renderAction(action: VisualAction, reducedMotion: boolean, index: numbe
           }}
         >
           <div className="reveal-badge">最终答案</div>
-          <div className="reveal-text">{action.text}</div>
+          <div className="reveal-text">
+            <MathMarkdown>{explanation.answer.markdown}</MathMarkdown>
+          </div>
         </motion.div>
       )
     case 'show_table':
@@ -97,7 +150,7 @@ function renderAction(action: VisualAction, reducedMotion: boolean, index: numbe
               {action.cells?.map((row, rowIndex) => (
                 <tr key={rowIndex}>
                   {row.map((cell, cellIndex) => (
-                    <td key={cellIndex}>{cell}</td>
+                    <td key={cellIndex}><MathMarkdown>{cell}</MathMarkdown></td>
                   ))}
                 </tr>
               ))}
@@ -112,42 +165,13 @@ function renderAction(action: VisualAction, reducedMotion: boolean, index: numbe
             {action.cells?.map((row, rowIndex) => (
               <div key={rowIndex} className="matrix-row">
                 {row.map((cell, cellIndex) => (
-                  <div key={cellIndex} className="matrix-cell">{cell}</div>
+                  <div key={cellIndex} className="matrix-cell">
+                    <MathMarkdown>{cell}</MathMarkdown>
+                  </div>
                 ))}
               </div>
             ))}
           </div>
-        </motion.div>
-      )
-    case 'draw_axis':
-      return (
-        <motion.div key={index} {...baseTransition} className="axis-placeholder">
-          坐标轴图示占位（需人工补充具体函数图像）
-        </motion.div>
-      )
-    case 'plot_curve':
-      return (
-        <motion.div key={index} {...baseTransition} className="curve-placeholder">
-          函数曲线图示占位（需人工补充具体曲线）
-        </motion.div>
-      )
-    case 'box_region':
-      return (
-        <motion.div
-          key={index}
-          className="box-region"
-          style={{
-            left: action.region?.x,
-            top: action.region?.y,
-            width: action.region?.width,
-            height: action.region?.height,
-            borderColor: action.color,
-          }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: reducedMotion ? 0 : 0.4 }}
-        >
-          {action.text}
         </motion.div>
       )
     default:
@@ -155,7 +179,7 @@ function renderAction(action: VisualAction, reducedMotion: boolean, index: numbe
   }
 }
 
-export default function MotionStage({ step, reducedMotion }: MotionStageProps) {
+export default function MotionStage({ explanation, step, reducedMotion }: MotionStageProps) {
   const layout = step.visual?.layout ?? 'blackboard'
   const actions = step.visual?.actions ?? []
 
@@ -171,14 +195,8 @@ export default function MotionStage({ step, reducedMotion }: MotionStageProps) {
             exit={{ opacity: 0 }}
             transition={{ duration: reducedMotion ? 0 : 0.25 }}
           >
-            {actions.length > 0 ? (
-              actions.map((action, index) => renderAction(action, reducedMotion, index))
-            ) : (
-              <Blackboard
-                text={step.narration}
-                formula={step.formula ?? undefined}
-                reducedMotion={reducedMotion}
-              />
+            {actions.map((action, index) =>
+              renderAction(action, explanation, reducedMotion, index),
             )}
           </motion.div>
         </AnimatePresence>

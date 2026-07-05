@@ -6,7 +6,6 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url))
 const root = join(__dirname, '..')
 
 const STEP_TYPES = new Set([
-  'intro',
   'show_question',
   'condition_extract',
   'formula_reveal',
@@ -22,19 +21,15 @@ const STEP_TYPES = new Set([
 ])
 
 const ACTION_KINDS = new Set([
-  'write_text',
+  'fade_in_question',
   'write_formula',
   'transform_formula',
-  'highlight_tokens',
-  'fade_in',
-  'fade_out',
-  'move_to_board',
-  'box_region',
-  'underline',
-  'reveal_answer',
+  'highlight_formula_tokens',
+  'highlight_question_keywords',
   'eliminate_choice',
-  'draw_axis',
-  'plot_curve',
+  'reveal_conclusion',
+  'show_readable_explanation',
+  'write_text',
   'show_table',
   'show_matrix',
 ])
@@ -69,6 +64,30 @@ function relativePath(file) {
   return file.startsWith(root) ? file.slice(root.length + 1) : file
 }
 
+function validateFormula(formula, context) {
+  const errors = []
+  if (!formula || typeof formula !== 'object') {
+    return [`${context} 必须是对象`]
+  }
+  if (typeof formula.id !== 'string' || formula.id.length === 0) {
+    errors.push(`${context}.id 必须是非空字符串`)
+  }
+  if (typeof formula.latex !== 'string' || formula.latex.length === 0) {
+    errors.push(`${context}.latex 必须是非空字符串`)
+  }
+  if (typeof formula.readable !== 'string' || formula.readable.length === 0) {
+    errors.push(`${context}.readable 必须是非空字符串`)
+  }
+  if (typeof formula.displayMode !== 'boolean') {
+    errors.push(`${context}.displayMode 必须是布尔值`)
+  }
+  const validRoles = new Set(['question', 'answer', 'derivation', 'explanation', 'conclusion'])
+  if (!validRoles.has(formula.role)) {
+    errors.push(`${context}.role 必须是允许的 role 之一`)
+  }
+  return errors
+}
+
 function validateAction(action, stepIndex, actionIndex) {
   const errors = []
   const prefix = `steps[${stepIndex}].visual.actions[${actionIndex}]`
@@ -82,15 +101,15 @@ function validateAction(action, stepIndex, actionIndex) {
   }
 
   if (action.kind === 'transform_formula') {
-    if (typeof action.fromFormula !== 'string' || action.fromFormula.length === 0) {
-      errors.push(`${prefix}.fromFormula 必须是非空字符串`)
+    if (typeof action.fromFormulaId !== 'string' || action.fromFormulaId.length === 0) {
+      errors.push(`${prefix}.fromFormulaId 必须是非空字符串`)
     }
-    if (typeof action.toFormula !== 'string' || action.toFormula.length === 0) {
-      errors.push(`${prefix}.toFormula 必须是非空字符串`)
+    if (typeof action.toFormulaId !== 'string' || action.toFormulaId.length === 0) {
+      errors.push(`${prefix}.toFormulaId 必须是非空字符串`)
     }
   }
 
-  if (action.kind === 'highlight_tokens') {
+  if (action.kind === 'highlight_formula_tokens') {
     if (!Array.isArray(action.tokens) || action.tokens.length === 0) {
       errors.push(`${prefix}.tokens 必须是非空数组`)
     }
@@ -102,14 +121,6 @@ function validateAction(action, stepIndex, actionIndex) {
     }
     if (action.targetChoice !== undefined && typeof action.targetChoice !== 'string') {
       errors.push(`${prefix}.targetChoice 必须是字符串`)
-    }
-  }
-
-  if (action.region && typeof action.region === 'object') {
-    const { x, y, width, height } = action.region
-    if (typeof x !== 'number' || typeof y !== 'number' ||
-        typeof width !== 'number' || typeof height !== 'number') {
-      errors.push(`${prefix}.region 必须包含 number 类型的 x, y, width, height`)
     }
   }
 
@@ -158,16 +169,22 @@ function validateStep(step, index) {
     errors.push(`${prefix}.type 必须是允许的 step type 之一`)
   }
 
-  if (typeof step.narration !== 'string') {
-    errors.push(`${prefix}.narration 必须是字符串`)
-  }
-
-  if (step.formula !== null && typeof step.formula !== 'string') {
-    errors.push(`${prefix}.formula 必须是字符串或 null`)
+  if (typeof step.narrationMarkdown !== 'string') {
+    errors.push(`${prefix}.narrationMarkdown 必须是字符串`)
   }
 
   if (!Number.isInteger(step.durationMs) || step.durationMs < 0) {
     errors.push(`${prefix}.durationMs 必须是非负整数`)
+  }
+
+  if (!Array.isArray(step.formulas)) {
+    errors.push(`${prefix}.formulas 必须是数组`)
+  } else {
+    for (let i = 0; i < step.formulas.length; i++) {
+      if (typeof step.formulas[i] !== 'string') {
+        errors.push(`${prefix}.formulas[${i}] 必须是字符串引用`)
+      }
+    }
   }
 
   if (!REVIEW_STATUS.has(step.reviewStatus)) {
@@ -222,18 +239,6 @@ function validateFile(parsed) {
     }
   }
 
-  if (typeof parsed.title !== 'string' || parsed.title.length === 0) {
-    errors.push('title 必须是非空字符串')
-  }
-
-  if (typeof parsed.questionText !== 'string') {
-    errors.push('questionText 必须是字符串')
-  }
-
-  if (typeof parsed.answer !== 'string') {
-    errors.push('answer 必须是字符串')
-  }
-
   if (parsed.reviewStatus !== 'needs_human_review') {
     errors.push(`reviewStatus 必须是 needs_human_review（当前: ${parsed.reviewStatus}）`)
   }
@@ -242,15 +247,68 @@ function validateFile(parsed) {
     errors.push(`finalizationStatus 必须是 blocked（当前: ${parsed.finalizationStatus}）`)
   }
 
-  if (!Number.isInteger(parsed.estimatedDurationMs) || parsed.estimatedDurationMs < 0) {
-    errors.push('estimatedDurationMs 必须是非负整数')
+  if (!parsed.question || typeof parsed.question !== 'object') {
+    errors.push('question 必须是对象')
+  } else {
+    if (typeof parsed.question.stemMarkdown !== 'string') {
+      errors.push('question.stemMarkdown 必须是字符串')
+    }
+    if (!Array.isArray(parsed.question.formulas)) {
+      errors.push('question.formulas 必须是数组')
+    } else {
+      parsed.question.formulas.forEach((f, i) => {
+        errors.push(...validateFormula(f, `question.formulas[${i}]`))
+      })
+    }
   }
 
-  if (!Array.isArray(parsed.steps) || parsed.steps.length === 0) {
-    errors.push('steps 必须是非空数组')
+  if (!parsed.answer || typeof parsed.answer !== 'object') {
+    errors.push('answer 必须是对象')
   } else {
-    for (let i = 0; i < parsed.steps.length; i++) {
-      errors.push(...validateStep(parsed.steps[i], i))
+    if (typeof parsed.answer.value !== 'string') {
+      errors.push('answer.value 必须是字符串')
+    }
+    if (typeof parsed.answer.markdown !== 'string') {
+      errors.push('answer.markdown 必须是字符串')
+    }
+    if (!Array.isArray(parsed.answer.formulas)) {
+      errors.push('answer.formulas 必须是数组')
+    } else {
+      parsed.answer.formulas.forEach((f, i) => {
+        errors.push(...validateFormula(f, `answer.formulas[${i}]`))
+      })
+    }
+  }
+
+  if (!parsed.explanation || typeof parsed.explanation !== 'object') {
+    errors.push('explanation 必须是对象')
+  } else {
+    if (typeof parsed.explanation.summaryMarkdown !== 'string') {
+      errors.push('explanation.summaryMarkdown 必须是字符串')
+    }
+    if (!Array.isArray(parsed.explanation.steps) || parsed.explanation.steps.length === 0) {
+      errors.push('explanation.steps 必须是非空数组')
+    } else {
+      for (let i = 0; i < parsed.explanation.steps.length; i++) {
+        errors.push(...validateStep(parsed.explanation.steps[i], i))
+      }
+    }
+  }
+
+  if (!parsed.rendering || typeof parsed.rendering !== 'object') {
+    errors.push('rendering 必须是对象')
+  } else {
+    if (parsed.rendering.mathRenderer !== 'katex') {
+      errors.push('rendering.mathRenderer 必须是 katex')
+    }
+    if (typeof parsed.rendering.markdownMath !== 'boolean') {
+      errors.push('rendering.markdownMath 必须是布尔值')
+    }
+    if (typeof parsed.rendering.supportsDisplayMath !== 'boolean') {
+      errors.push('rendering.supportsDisplayMath 必须是布尔值')
+    }
+    if (typeof parsed.rendering.supportsInlineMath !== 'boolean') {
+      errors.push('rendering.supportsInlineMath 必须是布尔值')
     }
   }
 
@@ -318,8 +376,10 @@ async function main() {
       subject: parsed.subject,
       year: parsed.year,
       questionNo: parsed.questionNo,
-      steps: Array.isArray(parsed.steps) ? parsed.steps.length : 0,
-      hasVisual: parsed.steps?.some((s) => s.visual?.actions?.length > 0),
+      steps: Array.isArray(parsed.explanation?.steps) ? parsed.explanation.steps.length : 0,
+      formulaCount:
+        (parsed.question?.formulas?.length || 0) + (parsed.answer?.formulas?.length || 0),
+      hasVisual: parsed.explanation?.steps?.some((s) => s.visual?.actions?.length > 0),
       reviewStatus: parsed.reviewStatus,
       finalizationStatus: parsed.finalizationStatus,
       sourcePath: parsed.source?.path,
@@ -331,7 +391,7 @@ async function main() {
   console.log(`错误数: ${totalErrors}`)
   for (const item of summary) {
     console.log(
-      `- ${item.file} | ${item.subject} ${item.year} Q${item.questionNo} | ${item.steps} 步 | visual=${item.hasVisual ? '是' : '否'} | ${item.reviewStatus} / ${item.finalizationStatus}`,
+      `- ${item.file} | ${item.subject} ${item.year} Q${item.questionNo} | ${item.steps} 步 | ${item.formulaCount} 公式 | visual=${item.hasVisual ? '是' : '否'} | ${item.reviewStatus} / ${item.finalizationStatus}`,
     )
   }
 

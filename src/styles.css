@@ -79,6 +79,16 @@ body {
   color: #9ca3af;
 }
 
+/* Markdown paragraphs */
+.md-paragraph {
+  margin: 0;
+  line-height: 1.7;
+}
+
+.md-paragraph .katex {
+  font-size: 1em;
+}
+
 /* Question paper panel */
 .paper-panel {
   min-height: 0;
@@ -108,6 +118,10 @@ body {
   font-size: 0.95rem;
   line-height: 1.7;
   color: #f3f4f6;
+}
+
+.paper-question .katex-display {
+  margin: 0.75rem 0;
 }
 
 .q-number {
@@ -215,7 +229,8 @@ body {
   margin-bottom: 1rem;
 }
 
-.formula-block {
+/* Formula rendering */
+.formula-render-area {
   padding: 0.75rem;
   background: #1a1d23;
   border: 1px dashed #374151;
@@ -224,8 +239,40 @@ body {
   color: #f3f4f6;
 }
 
-.formula-block .katex {
+.formula-render-area .katex {
   color: #f3f4f6;
+}
+
+.rendered-formula {
+  margin: 0.5rem 0;
+}
+
+.rendered-formula.display {
+  text-align: center;
+}
+
+.formula-readable {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin-top: 0.5rem;
+  line-height: 1.5;
+}
+
+.formula-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.gallery-item {
+  border: 1px solid #2d313e;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  background: #1a1d23;
+}
+
+.gallery-item.highlight {
+  border-color: #f59e0b;
 }
 
 /* Formula transform */
@@ -339,7 +386,7 @@ body {
   border-radius: 0.5rem;
   padding: 0.75rem;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
   overflow: hidden;
 }
@@ -355,14 +402,20 @@ body {
 }
 
 .choice-letter {
+  flex: 0 0 auto;
   font-size: 1.25rem;
   font-weight: 700;
   color: #60a5fa;
 }
 
 .choice-text {
-  font-size: 0.9rem;
+  flex: 1;
+  font-size: 0.85rem;
   color: #e5e7eb;
+}
+
+.choice-text .katex {
+  font-size: 0.9em;
 }
 
 .strike-line {
@@ -403,9 +456,13 @@ body {
 }
 
 .reveal-text {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: #22c55e;
+}
+
+.reveal-text .katex {
+  font-size: 1.1em;
 }
 
 /* Info panel */
@@ -423,6 +480,10 @@ body {
   background: #11131a;
   border-radius: 0.375rem;
   min-height: 80px;
+}
+
+.step-narration .katex {
+  font-size: 1em;
 }
 
 .meta-block {
@@ -645,32 +706,42 @@ body {
   font-family: ui-monospace, monospace;
 }
 
-.axis-placeholder,
-.curve-placeholder {
-  padding: 2rem;
-  text-align: center;
-  color: #6b7280;
-  border: 2px dashed #374151;
-  border-radius: 0.5rem;
-}
-
-.box-region {
-  position: absolute;
-  border: 2px solid #f59e0b;
-  border-radius: 0.375rem;
-  background: rgba(245, 158, 11, 0.1);
-  padding: 0.5rem;
-  color: #fbbf24;
-  font-size: 0.8rem;
-}
-
 .stage-line {
   font-size: 1rem;
   color: #f3f4f6;
   line-height: 1.6;
 }
 
+.stage-line .katex {
+  font-size: 1em;
+}
+
 .stage-formula {
   display: flex;
   justify-content: center;
+}
+
+.stage-readable {
+  font-size: 0.9rem;
+  color: #9ca3af;
+  padding: 0.75rem;
+  background: #1a1d23;
+  border-radius: 0.375rem;
+}
+
+.stage-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  color: #f3f4f6;
+}
+
+.keyword-tag {
+  padding: 0.25rem 0.5rem;
+  background: rgba(96, 165, 250, 0.15);
+  border: 1px solid #60a5fa;
+  border-radius: 0.25rem;
+  color: #93c5fd;
+  font-weight: 600;
 }

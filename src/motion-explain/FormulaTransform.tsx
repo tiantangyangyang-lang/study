@@ -1,9 +1,10 @@
 import { motion } from 'motion/react'
-import MotionFormulaBlock from './MotionFormulaBlock'
+import RenderedFormula from './RenderedFormula'
+import type { FormulaObject } from './types'
 
 interface FormulaTransformProps {
-  fromFormula: string
-  toFormula: string
+  fromFormula: FormulaObject
+  toFormula: FormulaObject
   changedTokens?: string[]
   reducedMotion: boolean
 }
@@ -23,7 +24,7 @@ export default function FormulaTransform({
         transition={{ duration: reducedMotion ? 0 : 0.5, ease: 'easeInOut' }}
       >
         <div className="transform-label">原式</div>
-        <MotionFormulaBlock formula={fromFormula} />
+        <RenderedFormula formula={fromFormula} showReadable={false} />
       </motion.div>
 
       <motion.div
@@ -47,7 +48,7 @@ export default function FormulaTransform({
         }}
       >
         <div className="transform-label">变形后</div>
-        <MotionFormulaBlock formula={toFormula} />
+        <RenderedFormula formula={toFormula} showReadable={false} />
       </motion.div>
 
       {changedTokens && changedTokens.length > 0 && (

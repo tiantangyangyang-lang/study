@@ -1,5 +1,4 @@
 export type StepType =
-  | 'intro'
   | 'show_question'
   | 'condition_extract'
   | 'formula_reveal'
@@ -14,42 +13,40 @@ export type StepType =
   | 'conclusion_reveal'
 
 export type ActionKind =
-  | 'write_text'
+  | 'fade_in_question'
   | 'write_formula'
   | 'transform_formula'
-  | 'highlight_tokens'
-  | 'fade_in'
-  | 'fade_out'
-  | 'move_to_board'
-  | 'box_region'
-  | 'underline'
-  | 'reveal_answer'
+  | 'highlight_formula_tokens'
+  | 'highlight_question_keywords'
   | 'eliminate_choice'
-  | 'draw_axis'
-  | 'plot_curve'
+  | 'reveal_conclusion'
+  | 'show_readable_explanation'
+  | 'write_text'
   | 'show_table'
   | 'show_matrix'
 
 export type ReviewStatus = 'needs_human_review' | 'verified' | 'rejected'
 export type FinalizationStatus = 'blocked' | 'ready' | 'imported'
 
+export interface FormulaObject {
+  id: string
+  latex: string
+  displayMode: boolean
+  readable: string
+  role: 'question' | 'answer' | 'derivation' | 'explanation' | 'conclusion'
+}
+
 export interface VisualAction {
   kind: ActionKind
   target?: string
   text?: string
-  formula?: string
-  fromFormula?: string
-  toFormula?: string
+  formulaId?: string
+  fromFormulaId?: string
+  toFormulaId?: string
   changedTokens?: string[]
   tokens?: string[]
-  token?: string
+  keywords?: string[]
   style?: 'box' | 'underline' | 'highlight' | 'pulse' | 'strike'
-  region?: {
-    x: number
-    y: number
-    width: number
-    height: number
-  }
   choices?: string[]
   targetChoice?: string
   columns?: number
@@ -64,14 +61,38 @@ export interface Visual {
   actions: VisualAction[]
 }
 
-export interface MotionStep {
+export interface ExplanationStep {
   id: string
   type: StepType
-  narration: string
-  formula: string | null
+  narrationMarkdown: string
   durationMs: number
+  formulas: string[]
+  visual: Visual
   reviewStatus: ReviewStatus
-  visual?: Visual
+}
+
+export interface QuestionBlock {
+  stemMarkdown: string
+  options?: string[]
+  formulas: FormulaObject[]
+}
+
+export interface AnswerBlock {
+  value: string
+  markdown: string
+  formulas: FormulaObject[]
+}
+
+export interface ExplanationBlock {
+  summaryMarkdown: string
+  steps: ExplanationStep[]
+}
+
+export interface RenderingConfig {
+  mathRenderer: 'katex'
+  markdownMath: boolean
+  supportsDisplayMath: boolean
+  supportsInlineMath: boolean
 }
 
 export interface MotionExplanationJSON {
@@ -84,12 +105,10 @@ export interface MotionExplanationJSON {
     path: string
     status: ReviewStatus
   }
-  title: string
-  questionText: string
-  answer: string
-  choices?: string[]
   reviewStatus: ReviewStatus
   finalizationStatus: FinalizationStatus
-  estimatedDurationMs: number
-  steps: MotionStep[]
+  question: QuestionBlock
+  answer: AnswerBlock
+  explanation: ExplanationBlock
+  rendering: RenderingConfig
 }

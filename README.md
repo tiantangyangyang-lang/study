@@ -1,14 +1,28 @@
-> > 这是重新生成的独立项目。旧 `D:\work\kaoyan-motion-explanations` 已清空并重建。
+> > 这是“考研真题 Motion 动态解析数据生成与网页预览项目”。
+> 它不是 Obsidian 项目。
 
-# 考研真题 Motion 动态解析生成器
+# 考研真题 Motion 动态解析
 
 ## 项目定位
 
-独立 Motion 动态解析预览项目，位于：
+独立项目，位于：
 
 ```
 D:\work\kaoyan-motion-explanations
 ```
+
+最终目标：
+
+```
+MD 真题
+  → 结构化 Motion JSON
+  → 未来入库
+  → 网页端读取数据库
+  → KaTeX 渲染数学公式
+  → Motion 播放动态解析
+```
+
+当前阶段：完成 JSON 生成、校验、网页预览。不入库、不改数据库 schema。
 
 ## 来源规则
 
@@ -25,15 +39,24 @@ D:\work\kaoyan-motion-explanations
 - 不读取 `D:\work\kaoyan`。
 - 不修改来源目录。
 - 不连接数据库。
+- 不写入数据库。
 - 不生成视频。
+- 不做 Obsidian Vault。
 - 不生成独立 React 代码。
 
 ## 技术栈
 
 - Vite + React + TypeScript
 - Motion（`import { motion, AnimatePresence } from "motion/react"`）
-- KaTeX 公式渲染
+- KaTeX + `react-markdown` + `remark-math` + `rehype-katex`
 - Zod JSON 校验
+
+## 公式渲染原则
+
+- 所有公式在 JSON 中保存为对象：`{ id, latex, displayMode, readable, role }`。
+- 网页端使用 KaTeX 渲染 `latex`，同时展示 `readable` 中文解释。
+- 题干、解析、旁白、步骤说明都支持 `$...$` 行内公式和 `$$...$$` 块级公式。
+- 不允许在页面上裸露 LaTeX 源码（除非显式开启 debug 模式）。
 
 ## 安装依赖
 
@@ -50,19 +73,17 @@ node scripts\scan-md-sources.mjs
 
 ## 生成一个样例 Motion JSON
 
-优先尝试数学二：
-
 ```powershell
 node scripts\generate-motion-json-from-md.mjs --subject math2 --limit 1
 ```
 
-如果数学二没有合适 MD，改用数学一：
+如果需要数学一：
 
 ```powershell
 node scripts\generate-motion-json-from-md.mjs --subject math1 --limit 1
 ```
 
-生成结果默认写入：
+生成结果：
 
 - `exports\motion-json\`
 - `src\data\sample-from-md.motion.json`（播放器样例）
@@ -96,3 +117,4 @@ npm.cmd run dev
 - 所有生成 JSON 默认 `needs_human_review` / `blocked`。
 - 不编造题干、答案、公式、解析。
 - 导入原项目数据库属于未来步骤，不在当前范围。
+- 本项目不是 Obsidian 项目，不生成 Obsidian Vault 或笔记。

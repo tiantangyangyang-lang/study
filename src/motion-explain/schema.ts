@@ -1,7 +1,6 @@
 import { z } from 'zod'
 
 const stepTypes = [
-  'intro',
   'show_question',
   'condition_extract',
   'formula_reveal',
@@ -17,19 +16,15 @@ const stepTypes = [
 ] as const
 
 const actionKinds = [
-  'write_text',
+  'fade_in_question',
   'write_formula',
   'transform_formula',
-  'highlight_tokens',
-  'fade_in',
-  'fade_out',
-  'move_to_board',
-  'box_region',
-  'underline',
-  'reveal_answer',
+  'highlight_formula_tokens',
+  'highlight_question_keywords',
   'eliminate_choice',
-  'draw_axis',
-  'plot_curve',
+  'reveal_conclusion',
+  'show_readable_explanation',
+  'write_text',
   'show_table',
   'show_matrix',
 ] as const
@@ -37,25 +32,24 @@ const actionKinds = [
 const reviewStatus = ['needs_human_review', 'verified', 'rejected'] as const
 const finalizationStatus = ['blocked', 'ready', 'imported'] as const
 
+export const formulaObjectSchema = z.object({
+  id: z.string().min(1),
+  latex: z.string().min(1),
+  displayMode: z.boolean(),
+  readable: z.string().min(1),
+  role: z.enum(['question', 'answer', 'derivation', 'explanation', 'conclusion']),
+})
+
 const visualActionSchema = z.object({
   kind: z.enum(actionKinds),
   target: z.string().optional(),
   text: z.string().optional(),
-  formula: z.string().optional(),
-  fromFormula: z.string().optional(),
-  toFormula: z.string().optional(),
+  formulaId: z.string().optional(),
+  fromFormulaId: z.string().optional(),
+  toFormulaId: z.string().optional(),
   changedTokens: z.array(z.string()).optional(),
   tokens: z.array(z.string()).optional(),
-  token: z.string().optional(),
-  style: z.enum(['box', 'underline', 'highlight', 'pulse', 'strike']).optional(),
-  region: z
-    .object({
-      x: z.number(),
-      y: z.number(),
-      width: z.number(),
-      height: z.number(),
-    })
-    .optional(),
+  keywords: z.array(z.string()).optional(),
   choices: z.array(z.string()).optional(),
   targetChoice: z.string().optional(),
   columns: z.number().int().positive().optional(),
@@ -70,14 +64,14 @@ const visualSchema = z.object({
   actions: z.array(visualActionSchema),
 })
 
-export const motionStepSchema = z.object({
+export const explanationStepSchema = z.object({
   id: z.string().min(1),
   type: z.enum(stepTypes),
-  narration: z.string(),
-  formula: z.string().nullable(),
+  narrationMarkdown: z.string(),
   durationMs: z.number().int().nonnegative(),
+  formulas: z.array(z.string()),
+  visual: visualSchema,
   reviewStatus: z.enum(reviewStatus),
-  visual: visualSchema.optional(),
 })
 
 export const motionExplanationSchema = z.object({
@@ -92,14 +86,28 @@ export const motionExplanationSchema = z.object({
     }),
     status: z.enum(reviewStatus),
   }),
-  title: z.string().min(1),
-  questionText: z.string(),
-  answer: z.string(),
-  choices: z.array(z.string()).optional(),
   reviewStatus: z.enum(reviewStatus),
   finalizationStatus: z.enum(finalizationStatus),
-  estimatedDurationMs: z.number().int().nonnegative(),
-  steps: z.array(motionStepSchema).min(1),
+  question: z.object({
+    stemMarkdown: z.string(),
+    options: z.array(z.string()).optional(),
+    formulas: z.array(formulaObjectSchema),
+  }),
+  answer: z.object({
+    value: z.string(),
+    markdown: z.string(),
+    formulas: z.array(formulaObjectSchema),
+  }),
+  explanation: z.object({
+    summaryMarkdown: z.string(),
+    steps: z.array(explanationStepSchema).min(1),
+  }),
+  rendering: z.object({
+    mathRenderer: z.literal('katex'),
+    markdownMath: z.boolean(),
+    supportsDisplayMath: z.boolean(),
+    supportsInlineMath: z.boolean(),
+  }),
 })
 
 export type MotionExplanationSchema = z.infer<typeof motionExplanationSchema>

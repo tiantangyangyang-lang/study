@@ -1,13 +1,12 @@
-import type { MotionStep } from './types'
+import type { ExplanationStep } from './types'
 
 interface MotionTimelineProps {
-  steps: MotionStep[]
+  steps: ExplanationStep[]
   currentIndex: number
   onSelect: (index: number) => void
 }
 
-const typeLabels: Record<MotionStep['type'], string> = {
-  intro: '引入',
+const typeLabels: Record<ExplanationStep['type'], string> = {
   show_question: '题干',
   condition_extract: '条件',
   formula_reveal: '公式',
@@ -39,7 +38,7 @@ export default function MotionTimeline({
           <span className="step-number">{index + 1}</span>
           <div>
             <div className="step-type">{typeLabels[step.type] ?? step.type}</div>
-            <div>{step.narration.slice(0, 40)}</div>
+            <div>{step.narrationMarkdown.slice(0, 40)}</div>
           </div>
         </li>
       ))}

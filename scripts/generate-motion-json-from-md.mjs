@@ -78,7 +78,7 @@ function extractQuestionNo(content) {
   return 1
 }
 
-function extractQuestionText(content) {
+function extractQuestionStem(content) {
   const lines = content.split(/\r?\n/).filter((l) => l.trim().length > 0)
 
   for (let i = 0; i < Math.min(lines.length, 40); i++) {
@@ -89,11 +89,6 @@ function extractQuestionText(content) {
   }
 
   return 'TODO: 题干未能自动提取，需要人工核对'
-}
-
-function extractChoices(content) {
-  const matches = content.match(/[A-D][.．、\s]+[^\n]+/g) || []
-  return matches.slice(0, 4).map((m) => m.trim())
 }
 
 function extractAnswer(content) {
@@ -107,7 +102,7 @@ function extractAnswer(content) {
       }
     }
   }
-  return 'TODO: 答案未能自动提取，需要人工核对'
+  return 'TODO'
 }
 
 function extractExplanation(content) {
@@ -126,96 +121,100 @@ function extractExplanation(content) {
       }
     }
   }
-  return 'TODO: 解析未能自动提取，需要人工核对'
+  return 'TODO'
 }
 
 function extractFormulas(content) {
   const display = content.match(/\$\$[\s\S]*?\$\$/g) || []
   const inline = content.match(/\$[^\$\r\n]+?\$/g) || []
-  return [...display, ...inline].slice(0, 8)
+  return [...display, ...inline].slice(0, 12)
+}
+
+function extractOptions(content) {
+  const matches = content.match(/[A-D][.．、\s]+[^\n]+/g) || []
+  return matches.slice(0, 4).map((m) => m.trim())
 }
 
 function cleanFormula(raw) {
   return raw.replace(/^\$\$?|\$\$?$/g, '').trim()
 }
 
+function makeFormulaId(role, index) {
+  return `f-${role}-${String(index + 1).padStart(3, '0')}`
+}
+
+function createFormula(latex, role, index, displayMode = true) {
+  return {
+    id: makeFormulaId(role, index),
+    latex: cleanFormula(latex),
+    displayMode,
+    readable: `该公式来自原始 Markdown，具体含义需要人工核对。`,
+    role,
+  }
+}
+
 function generateMotionJSON({ subject, filePath, content }) {
   const year = extractYearFromPath(filePath)
   const questionNo = extractQuestionNo(content)
-  const questionText = extractQuestionText(content)
-  const choices = extractChoices(content)
-  const answer = extractAnswer(content)
-  const explanation = extractExplanation(content)
-  const formulas = extractFormulas(content)
+  const stemMarkdown = extractQuestionStem(content)
+  const options = extractOptions(content)
+  const answerValue = extractAnswer(content)
+  const explanationText = extractExplanation(content)
+  const rawFormulas = extractFormulas(content)
+
+  const questionFormulas = rawFormulas.slice(0, 4).map((latex, i) =>
+    createFormula(latex, 'question', i, latex.startsWith('$$')),
+  )
+  const derivationFormulas = rawFormulas.slice(4, 8).map((latex, i) =>
+    createFormula(latex, 'derivation', i, latex.startsWith('$$')),
+  )
+  const allFormulas = [...questionFormulas, ...derivationFormulas]
 
   const steps = []
   const getId = (n) => `step-${String(n).padStart(3, '0')}`
 
-  // Step 1: intro
-  steps.push({
-    id: getId(steps.length + 1),
-    type: 'intro',
-    narration: `本题为 ${subject === 'math1' ? '数学一' : '数学二'} ${year} 年第 ${questionNo} 题。以下内容从 Markdown 文件自动提取，尚未人工核对，需要审核。`,
-    formula: null,
-    durationMs: 3000,
-    reviewStatus: 'needs_human_review',
-    visual: {
-      layout: 'blackboard',
-      actions: [
-        {
-          kind: 'write_text',
-          text: `${subject === 'math1' ? '数学一' : '数学二'} ${year} 年第 ${questionNo} 题`,
-        },
-      ],
-    },
-  })
-
-  // Step 2: show_question
+  // Step 1: show_question
   steps.push({
     id: getId(steps.length + 1),
     type: 'show_question',
-    narration: `请先读题：${questionText}`,
-    formula: null,
+    narrationMarkdown: '先阅读题干，找出已知条件和要求。',
     durationMs: 4000,
-    reviewStatus: 'needs_human_review',
+    formulas: questionFormulas.map((f) => f.id),
     visual: {
       layout: 'question',
       actions: [
         {
-          kind: 'write_text',
-          text: questionText,
+          kind: 'fade_in_question',
+        },
+        {
+          kind: 'highlight_question_keywords',
+          keywords: ['已知条件', '求', 'TODO'],
         },
       ],
     },
+    reviewStatus: 'needs_human_review',
   })
 
-  // Step 3: condition_extract
-  const conditionFormula = formulas[0] ? cleanFormula(formulas[0]) : null
+  // Step 2: condition_extract
   steps.push({
     id: getId(steps.length + 1),
     type: 'condition_extract',
-    narration: conditionFormula
+    narrationMarkdown: questionFormulas.length > 0
       ? '提取题目中的关键条件或已知公式。'
       : '题目条件未能自动提取，需要人工核对。',
-    formula: conditionFormula,
     durationMs: 4000,
-    reviewStatus: 'needs_human_review',
+    formulas: questionFormulas.slice(0, 2).map((f) => f.id),
     visual: {
       layout: 'blackboard',
-      actions: conditionFormula
+      actions: questionFormulas.length > 0
         ? [
             {
               kind: 'write_text',
               text: '关键条件',
             },
             {
-              kind: 'box_region',
-              region: { x: 10, y: 10, width: 200, height: 60 },
-              color: '#f59e0b',
-            },
-            {
               kind: 'write_formula',
-              formula: conditionFormula,
+              formulaId: questionFormulas[0]?.id,
             },
           ]
         : [
@@ -225,18 +224,17 @@ function generateMotionJSON({ subject, filePath, content }) {
             },
           ],
     },
+    reviewStatus: 'needs_human_review',
   })
 
-  // Step 4: formula_reveal
-  if (formulas.length >= 2) {
-    const formula = cleanFormula(formulas[1])
+  // Step 3: formula_reveal
+  if (derivationFormulas.length > 0) {
     steps.push({
       id: getId(steps.length + 1),
       type: 'formula_reveal',
-      narration: '揭示解题需要的核心公式。',
-      formula,
+      narrationMarkdown: '揭示解题需要的核心公式或定理。',
       durationMs: 4000,
-      reviewStatus: 'needs_human_review',
+      formulas: [derivationFormulas[0]?.id].filter(Boolean),
       visual: {
         layout: 'blackboard',
         actions: [
@@ -246,120 +244,126 @@ function generateMotionJSON({ subject, filePath, content }) {
           },
           {
             kind: 'write_formula',
-            formula,
+            formulaId: derivationFormulas[0]?.id,
           },
         ],
       },
+      reviewStatus: 'needs_human_review',
     })
   }
 
-  // Step 5: equation_transform
-  if (formulas.length >= 3) {
-    const fromFormula = cleanFormula(formulas[1] || formulas[0])
-    const toFormula = cleanFormula(formulas[2])
+  // Step 4: equation_transform
+  if (derivationFormulas.length >= 2) {
+    const fromId = derivationFormulas[0]?.id
+    const toId = derivationFormulas[1]?.id
     steps.push({
       id: getId(steps.length + 1),
       type: 'equation_transform',
-      narration: '对关键式子进行变形，注意变化的部分。',
-      formula: toFormula,
+      narrationMarkdown: '对关键式子进行变形，注意变化的部分。',
       durationMs: 5000,
-      reviewStatus: 'needs_human_review',
+      formulas: [fromId, toId].filter(Boolean),
       visual: {
         layout: 'blackboard',
         actions: [
           {
             kind: 'transform_formula',
-            fromFormula,
-            toFormula,
+            fromFormulaId: fromId,
+            toFormulaId: toId,
             changedTokens: ['TODO: 人工标注变化项'],
           },
         ],
       },
+      reviewStatus: 'needs_human_review',
     })
   }
 
-  // Step 6: token_highlight
-  if (formulas.length > 0) {
-    const formula = cleanFormula(formulas[0])
+  // Step 5: token_highlight
+  if (questionFormulas.length > 0) {
+    const formula = questionFormulas[0]
     steps.push({
       id: getId(steps.length + 1),
       type: 'token_highlight',
-      narration: '高亮当前步骤中需要重点关注的符号或项。',
-      formula,
+      narrationMarkdown: '高亮当前步骤中需要重点关注的符号或项。',
       durationMs: 4000,
-      reviewStatus: 'needs_human_review',
+      formulas: [formula.id],
       visual: {
         layout: 'blackboard',
         actions: [
           {
-            kind: 'highlight_tokens',
-            formula,
+            kind: 'highlight_formula_tokens',
+            formulaId: formula.id,
             tokens: ['x', 'a', '极限', 'TODO'],
             style: 'box',
           },
         ],
       },
+      reviewStatus: 'needs_human_review',
     })
   }
 
-  // Step 7: choice_elimination (if choices detected)
-  if (choices.length > 0) {
+  // Step 6: choice_elimination
+  if (options.length > 0) {
     steps.push({
       id: getId(steps.length + 1),
       type: 'choice_elimination',
-      narration: '逐项分析选项。不确定的项保持待审核状态。',
-      formula: null,
+      narrationMarkdown: '逐项分析选项。不确定的项保持待审核状态。',
       durationMs: 5000,
-      reviewStatus: 'needs_human_review',
+      formulas: [],
       visual: {
         layout: 'split',
         actions: [
           {
             kind: 'eliminate_choice',
-            choices,
+            choices: options,
             targetChoice: 'TODO',
           },
         ],
       },
+      reviewStatus: 'needs_human_review',
     })
   }
 
-  // Step 8: explanation_text
+  // Step 7: explanation_text
   steps.push({
     id: getId(steps.length + 1),
     type: 'explanation_text',
-    narration: `解析摘要：${explanation}`,
-    formula: null,
+    narrationMarkdown:
+      explanationText === 'TODO'
+        ? '解析未能自动提取，需要人工核对。'
+        : `解析摘要：${explanationText}`,
     durationMs: 5000,
-    reviewStatus: 'needs_human_review',
+    formulas: allFormulas.slice(0, 2).map((f) => f.id),
     visual: {
       layout: 'blackboard',
       actions: [
         {
           kind: 'write_text',
-          text: explanation,
+          text: explanationText === 'TODO' ? 'TODO: 解析需要人工补充' : explanationText,
         },
       ],
     },
+    reviewStatus: 'needs_human_review',
   })
 
-  // Step 9: conclusion_reveal
+  // Step 8: conclusion_reveal
   steps.push({
     id: getId(steps.length + 1),
     type: 'conclusion_reveal',
-    narration: `最终答案：${answer}。真实答案必须经人工核对原题与解析后确认。`,
-    formula: null,
+    narrationMarkdown:
+      answerValue === 'TODO'
+        ? '答案未能自动提取，需要人工核对。'
+        : `最终答案：${answerValue}。真实答案必须经人工核对原题与解析后确认。`,
     durationMs: 3500,
-    reviewStatus: 'needs_human_review',
+    formulas: [],
     visual: {
       layout: 'blackboard',
       actions: [
         {
-          kind: 'reveal_answer',
-          text: answer,
+          kind: 'reveal_conclusion',
         },
       ],
     },
+    reviewStatus: 'needs_human_review',
   })
 
   return {
@@ -372,14 +376,34 @@ function generateMotionJSON({ subject, filePath, content }) {
       path: filePath,
       status: 'needs_human_review',
     },
-    title: `${subject === 'math1' ? '数学一' : '数学二'} ${year} 第 ${questionNo} 题（自动提取，待核对）`,
-    questionText,
-    answer,
-    choices: choices.length > 0 ? choices : undefined,
     reviewStatus: 'needs_human_review',
     finalizationStatus: 'blocked',
-    estimatedDurationMs: steps.reduce((sum, s) => sum + s.durationMs, 0),
-    steps,
+    question: {
+      stemMarkdown,
+      options: options.length > 0 ? options : undefined,
+      formulas: questionFormulas,
+    },
+    answer: {
+      value: answerValue,
+      markdown:
+        answerValue === 'TODO'
+          ? '答案待人工核对'
+          : `答案：${answerValue}`,
+      formulas: [],
+    },
+    explanation: {
+      summaryMarkdown:
+        explanationText === 'TODO'
+          ? '解题思路待人工补充。'
+          : `整体解题思路：${explanationText}`,
+      steps,
+    },
+    rendering: {
+      mathRenderer: 'katex',
+      markdownMath: true,
+      supportsDisplayMath: true,
+      supportsInlineMath: true,
+    },
   }
 }
 

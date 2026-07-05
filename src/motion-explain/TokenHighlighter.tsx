@@ -1,10 +1,11 @@
 import { motion } from 'motion/react'
-import MotionFormulaBlock from './MotionFormulaBlock'
+import RenderedFormula from './RenderedFormula'
+import type { FormulaObject } from './types'
 
 interface TokenHighlighterProps {
-  formula?: string
+  formula?: FormulaObject
   tokens: string[]
-  style?: 'box' | 'underline' | 'highlight' | 'pulse' | 'strike'
+  style?: 'box' | 'underline' | 'highlight' | 'pulse'
   reducedMotion: boolean
 }
 
@@ -18,7 +19,7 @@ export default function TokenHighlighter({
 
   return (
     <div className={className}>
-      {formula && <MotionFormulaBlock formula={formula} />}
+      {formula && <RenderedFormula formula={formula} showReadable={false} />}
       <div className="token-list">
         {tokens.map((token, index) => (
           <motion.span
